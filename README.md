@@ -7,5 +7,6 @@ There are only three platforms. The three are the following:
 - Linux
 ## Installation
 To install, download and run the `install_windows.sh`, `install_macos.sh` or `install_linux.sh` script depending on your operating system.
+> Edit: the `install_windows.sh` and the `install_linux.sh` have not been created. They will be created soon.
 ## How to play
 To play, click the play button. To move the paddle up and down, click the up and down buttons
