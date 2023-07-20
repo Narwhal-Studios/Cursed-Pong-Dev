@@ -8,5 +8,7 @@ unzip files.zip
 rm files.zip
 cd ~/Applications
 echo "Downloading application..."
-wget https://cursedpongdevs.github.io/cursed_pong/files/macos.app
+wget https://cursedpongdevs.github.io/cursed_pong/files/cursed_pong.zip
+unzip cursed_pong.zip
+rm cursed_pong.zip
 echo "Done!"
