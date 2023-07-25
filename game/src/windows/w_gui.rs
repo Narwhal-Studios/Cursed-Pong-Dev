@@ -39,14 +39,14 @@ impl GuiParts for Gui {
         self.value[self.bat_y - 1][1] = true;
         self.value[self.bat_y][1] = true;
         self.value[self.bat_y + 1][1] = true;
-        self.ivalue[self.bat_y - 2][0] = format!("{}cursed_pong{}{}.png", home(), '/', &self.onw);
-        self.ivalue[self.bat_y - 1][0] = format!("{}cursed_pong{}{}.png", home(), '/', &self.onw);
-        self.ivalue[self.bat_y][0] = format!("{}cursed_pong{}{}.png", home(), '/', &self.onw);
+        self.ivalue[self.bat_y - 2][0] = format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
+        self.ivalue[self.bat_y - 1][0] = format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
+        self.ivalue[self.bat_y][0] = format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
     }
 
     fn clear(&mut self) {
         self.value = [[false; 34]; 34];
-        let path = &format!("{}cursed_pong{}{}.png", home(), '/', self.offw);
+        let path = &format!("{}Cursed-Pong{}{}.png", home(), '/', self.offw);
         let mut ivalue = vec![];
         for _ in 0..32 {
             let mut to_add = vec![];
@@ -69,7 +69,7 @@ impl GuiParts for Gui {
     fn show_pixel(&mut self) {
         self.value[self.position.y][self.position.x] = true;
         self.ivalue[self.position.y - 1][self.position.x - 1] =
-            format!("{}cursed_pong{}{}.png", home(), '/', &self.onw);
+            format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
     }
     fn check_bat(&self) -> bool {
         if self.position.y == self.bat_y
@@ -129,20 +129,20 @@ impl GuiParts for Gui {
         images.0.set_pixel(0, 0, on).expect("Failed to set pixel");
         images.1.set_pixel(0, 0, off).expect("Failed to set pixel");
         let mut commds = [
-            process::Command::new(format!("rm -r {}cursed_pong", home())),
-            process::Command::new(format!("mkdir {}cursed_pong", home())),
+            process::Command::new(format!("rm -r {}Cursed-Pong", home())),
+            process::Command::new(format!("mkdir {}Cursed-Pong", home())),
         ];
         commds[0].status().expect("Failed to run command 1");
         commds[1].status().expect("Failed to run command 2");
         let words = [gen(), gen()];
         raster::save(
             &images.0,
-            &format!("{}cursed_pong{}{}.png", home(), '/', words[0]),
+            &format!("{}Cursed-Pong{}{}.png", home(), '/', words[0]),
         )
         .expect("Failed to save image");
         raster::save(
             &images.1,
-            &format!("{}cursed_pong{}{}.png", home(), '/', words[1]),
+            &format!("{}Cursed-Pong{}{}.png", home(), '/', words[1]),
         )
         .expect("Failed to save image");
         self.onw = words[0].to_string();
@@ -188,7 +188,7 @@ fn home() -> String {
     }
 }
 fn rmdir() {
-    let mut commd = process::Command::new(format!("rm -r {}cursed_pong", home()));
+    let mut commd = process::Command::new(format!("rm -r {}Cursed-Pong", home()));
     commd.status().expect("Failed to run command post");
 }
 fn windows() -> bool {
@@ -206,13 +206,13 @@ impl Application for Gui {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<GuiMessage>) {
-        let path = format!("{}cursed_pong", home());
+        let path = format!("{}Cursed-Pong", home());
         println!("{}", path);
         dbg!(path);
-        let mut commd = process::Command::new(format!("mkdir {}cursed_pong", home()));
+        let mut commd = process::Command::new(format!("mkdir {}Cursed-Pong", home()));
         dbg!(&commd);
         commd.status().expect("Failed to run command pre");
-        let path = &format!("{}cursed_pong{}off.png", home(), '/');
+        let path = &format!("{}Cursed-Pong{}off.png", home(), '/');
         let mut ivalue = vec![];
         for _ in 0..32 {
             let mut to_add = vec![];
@@ -293,7 +293,7 @@ impl Application for Gui {
                 self.addy();
             }
             GuiMessage::Restart => {
-                let path = &format!("{}cursed_pong{}off.png", home(), '/');
+                let path = &format!("{}Cursed-Pong{}off.png", home(), '/');
                 let mut ivalue = vec![];
                 for _ in 0..32 {
                     let mut to_add = vec![];

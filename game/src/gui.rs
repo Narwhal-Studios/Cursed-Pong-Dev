@@ -39,14 +39,14 @@ impl GuiParts for Gui {
         self.value[self.bat_y - 1][1] = true;
         self.value[self.bat_y][1] = true;
         self.value[self.bat_y + 1][1] = true;
-        self.ivalue[self.bat_y - 2][0] = format!("{}.cursedpong/{}.png", home(), &self.onw);
-        self.ivalue[self.bat_y - 1][0] = format!("{}.cursedpong/{}.png", home(), &self.onw);
-        self.ivalue[self.bat_y][0] = format!("{}.cursedpong/{}.png", home(), &self.onw);
+        self.ivalue[self.bat_y - 2][0] = format!("{}.Cursed-Pong/{}.png", home(), &self.onw);
+        self.ivalue[self.bat_y - 1][0] = format!("{}.Cursed-Pong/{}.png", home(), &self.onw);
+        self.ivalue[self.bat_y][0] = format!("{}.Cursed-Pong/{}.png", home(), &self.onw);
     }
 
     fn clear(&mut self) {
         self.value = [[false; 18]; 18];
-        let path = &format!("{}.cursedpong/{}.png", home(), self.offw);
+        let path = &format!("{}.Cursed-Pong/{}.png", home(), self.offw);
         let mut ivalue = vec![];
         for _ in 0..16 {
             let mut to_add = vec![];
@@ -69,7 +69,7 @@ impl GuiParts for Gui {
     fn show_pixel(&mut self) {
         self.value[self.position.y][self.position.x] = true;
         self.ivalue[self.position.y - 1][self.position.x - 1] =
-            format!("{}.cursedpong/{}.png", home(), &self.onw);
+            format!("{}.Cursed-Pong/{}.png", home(), &self.onw);
     }
     fn check_bat(&self) -> bool {
         if self.position.y == self.bat_y
@@ -132,19 +132,19 @@ impl GuiParts for Gui {
         if !windows() {
             commds[0].arg("-r");
         }
-        commds[0].arg(format!("{}.cursedpong", home()));
-        commds[1].arg(format!("{}.cursedpong", home()));
+        commds[0].arg(format!("{}.Cursed-Pong", home()));
+        commds[1].arg(format!("{}.Cursed-Pong", home()));
         commds[0].status().expect("Failed to run command 1");
         commds[1].status().expect("Failed to run command 2");
         let words = [gen(), gen()];
         raster::save(
             &images.0,
-            &format!("{}.cursedpong/{}.png", home(), words[0]),
+            &format!("{}.Cursed-Pong/{}.png", home(), words[0]),
         )
         .expect("Failed to save image");
         raster::save(
             &images.1,
-            &format!("{}.cursedpong/{}.png", home(), words[1]),
+            &format!("{}.Cursed-Pong/{}.png", home(), words[1]),
         )
         .expect("Failed to save image");
         self.onw = words[0].to_string();
@@ -211,7 +211,7 @@ impl Application for Gui {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<GuiMessage>) {
-        let path = &format!("{}.cursedpong/off.png", home());
+        let path = &format!("{}.Cursed-Pong/off.png", home());
         let mut ivalue = vec![];
         for _ in 0..16 {
             let mut to_add = vec![];
@@ -292,7 +292,7 @@ impl Application for Gui {
                 self.addy();
             }
             GuiMessage::Restart => {
-                let path = &format!("{}.cursedpong/off.png", home());
+                let path = &format!("{}.Cursed-Pong/off.png", home());
                 let mut ivalue = vec![];
                 for _ in 0..16 {
                     let mut to_add = vec![];

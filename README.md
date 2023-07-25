@@ -1,4 +1,4 @@
-# cursed_pong
+# Cursed Pong
 A fun game based on the game Pong created by Atari
 ## Compatible platforms
 There are only three platforms. The three are the following:  

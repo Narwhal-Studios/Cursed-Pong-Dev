@@ -1,14 +1,14 @@
 #!/bin/bash
 cd ~/Library/'Application Support'
-mkdir cursed_pong
-cd cursed_pong
+mkdir Cursed-Pong
+cd Cursed-Pong
 echo "Downloading application files..."
-wget https://cursedpongdevs.github.io/cursed_pong/files/files.zip
+wget https://narwhal-studios.github.io/Cursed-Pong/files/files.zip
 unzip files.zip
 rm files.zip
 cd ~/Applications
 echo "Downloading application..."
-wget https://cursedpongdevs.github.io/cursed_pong/files/cursed_pong.zip
-unzip cursed_pong.zip
-rm cursed_pong.zip
+wget https://cursedpongdevs.github.io/Cursed-Pong/files/Cursed-Pong.zip
+unzip Cursed-Pong.zip
+rm Cursed-Pong.zip
 echo "Done!"
