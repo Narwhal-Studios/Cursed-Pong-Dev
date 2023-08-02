@@ -2,7 +2,7 @@ use iced::{
     theme::{self, Theme as itheme},
     Color as icolor,
 };
-use raster::Color as RColor;
+use crate::defs::str;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
@@ -31,17 +31,17 @@ impl Color {
             Self::Pink => (1.0, 0.5, 0.8),
         }
     }
-    pub fn to_rcolor(&self) -> RColor {
+    pub fn to_string(&self) -> String {
         match self {
-            Self::White => RColor::rgb(255, 255, 255),
-            Self::Black => RColor::rgb(0, 0, 0),
-            Self::Red => RColor::rgb(255, 0, 0),
-            Self::Orange => RColor::rgb(255, 127, 0),
-            Self::Yellow => RColor::rgb(255, 255, 0),
-            Self::Green => RColor::rgb(0, 255, 0),
-            Self::Blue => RColor::rgb(0, 0, 255),
-            Self::Purple => RColor::rgb(178, 0, 178),
-            Self::Pink => RColor::rgb(255, 127, 204),
+            Self::White => str("white"),
+            Self::Black => str("black"),
+            Self::Red => str("red"),
+            Self::Orange => str("orange"),
+            Self::Yellow => str("yellow"),
+            Self::Green => str("green"),
+            Self::Blue => str("blue"),
+            Self::Purple => str("purple"),
+            Self::Pink => str("pink"),
         }
     }
 }
@@ -49,15 +49,13 @@ impl Color {
 pub struct Theme {
     background: Color,
     on: Color,
-    off: Color,
 }
 
 impl Theme {
-    pub fn new(background: Color, on: Color, off: Color) -> Self {
+    pub fn new(background: Color, on: Color) -> Self {
         Self {
-            background,
+            background: background,
             on,
-            off,
         }
     }
     pub fn to_theme(&self) -> itheme {
@@ -71,8 +69,5 @@ impl Theme {
             success: icolor::from_rgb(0.0, 1.0, 0.0),
             danger: icolor::from_rgb(1.0, 0.0, 0.0),
         })
-    }
-    pub fn to_rcolor(&self) -> (RColor, RColor) {
-        (self.on.to_rcolor(), self.off.to_rcolor())
     }
 }

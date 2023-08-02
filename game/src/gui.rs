@@ -1,5 +1,17 @@
 use crate::colors::{Color, Theme};
 use crate::gui_parts::{GuiParts, Position, Velocity};
+use crate::defs::{
+    GuiMessage,
+    Page,
+    Time,
+    Update,
+    Id,
+    Version,
+    home,
+    sw,
+    download,
+    str,
+};
 use iced::time;
 use iced::{
     executor,
@@ -14,229 +26,35 @@ use mongodb::{
     error::Error,
     sync::{Client, Database},
 };
-use rand::{thread_rng, Rng};
-use random_word::gen;
-use raster::Image as RImage;
-use serde::{Deserialize, Serialize};
 use std::{
+    path::Path,
     fs::{self, File},
-    process::{self, Command},
-    time::{Duration, Instant},
+    process,
+    time::Duration,
 };
 use version::version;
-use whoami::Platform;
+use run_script::run_script;
 
 pub struct Gui {
-    value: [[bool; 34]; 34],
-    velocity: Velocity,
-    delay: u64,
-    page: Page,
-    bat_y: usize,
-    position: Position,
-    is_playing: bool,
-    theme: itheme,
-    ivalue: Vec<Vec<String>>,
-    onw: String,
-    offw: String,
-    score: usize,
-    code: String,
-    err: String,
-    codeu: String,
-    db: Database,
-    time: Time,
-    id: usize,
-    version: String,
-}
-
-impl GuiParts for Gui {
-    fn draw_bat(&mut self) {
-        self.value[self.bat_y - 1][1] = true;
-        self.value[self.bat_y][1] = true;
-        self.value[self.bat_y + 1][1] = true;
-        self.ivalue[self.bat_y - 2][0] = format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
-        self.ivalue[self.bat_y - 1][0] = format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
-        self.ivalue[self.bat_y][0] = format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
-    }
-
-    fn clear(&mut self) {
-        self.value = [[false; 34]; 34];
-        let path = &format!("{}Cursed-Pong{}{}.png", home(), '/', self.offw);
-        let mut ivalue = vec![];
-        for _ in 0..32 {
-            let mut to_add = vec![];
-            for _ in 0..32 {
-                to_add.push(path.to_string());
-            }
-            ivalue.push(to_add);
-        }
-        self.ivalue = ivalue;
-        self.cre_bord();
-    }
-    fn cre_bord(&mut self) {
-        self.value[0] = [true; 34];
-        self.value[33] = [true; 34];
-        for num in 0..34 {
-            self.value[num][0] = true;
-            self.value[num][33] = true;
-        }
-    }
-    fn show_pixel(&mut self) {
-        self.value[self.position.y][self.position.x] = true;
-        self.ivalue[self.position.y - 1][self.position.x - 1] =
-            format!("{}Cursed-Pong{}{}.png", home(), '/', &self.onw);
-    }
-    fn check_bat(&self) -> bool {
-        if self.position.y == self.bat_y
-            || self.position.y == self.bat_y - 1
-            || self.position.y == self.bat_y + 1
-        {
-            if self.velocity.x < 0 {
-                if self.position.x == 2 {
-                    true
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-    fn addx(&mut self) {
-        self.position.x = ((self.position.x as i32) + self.velocity.x) as usize;
-    }
-    fn addy(&mut self) {
-        self.position.y = ((self.position.y as i32) + self.velocity.y) as usize;
-    }
-    fn changex(&mut self) {
-        let num = rand::thread_rng().gen_range(0..3);
-        if num == 0 {
-            self.velocity.x = -self.velocity.x;
-        } else if num == 1 {
-            self.velocity.x = -self.velocity.x;
-            self.velocity.y = -1;
-        } else {
-            self.velocity.x = -self.velocity.x;
-            self.velocity.y = 1;
-        }
-    }
-    fn changey(&mut self) {
-        let num = rand::thread_rng().gen_range(0..3);
-        if num == 0 {
-            self.velocity.y = -self.velocity.y;
-        } else if num == 1 {
-            self.velocity.y = -self.velocity.y;
-            self.velocity.x = -1;
-        } else {
-            self.velocity.y = -self.velocity.y;
-            self.velocity.x = 1;
-        }
-    }
-    fn toggle_theme(&mut self) {
-        let colors = [
-            Color::Black,
-            Color::White,
-            Color::Red,
-            Color::Orange,
-            Color::Yellow,
-            Color::Green,
-            Color::Blue,
-            Color::Purple,
-            Color::Pink,
-        ];
-        let background = colors[thread_rng().gen_range(0..=8)];
-        let text_num = colors[thread_rng().gen_range(0..=8)];
-        let theme = Theme::new(background, text_num, background);
-        let (on, off) = theme.to_rcolor();
-        let mut images = (RImage::blank(1, 1), RImage::blank(1, 1));
-        images.0.set_pixel(0, 0, on).expect("Failed to set pixel");
-        images.1.set_pixel(0, 0, off).expect("Failed to set pixel");
-        let mut commd = Command::new("rm");
-        commd.arg(format!("{}Cursed-Pong/*", home()));
-        commd.status().expect("Failed to run command 1");
-        let words = [gen(), gen()];
-        raster::save(
-            &images.0,
-            &format!("{}Cursed-Pong{}{}.png", home(), '/', words[0]),
-        )
-        .expect("Failed to save image");
-        raster::save(
-            &images.1,
-            &format!("{}Cursed-Pong{}{}.png", home(), '/', words[1]),
-        )
-        .expect("Failed to save image");
-        self.onw = words[0].to_string();
-        self.offw = words[1].to_string();
-        self.theme = theme.to_theme();
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Page {
-    Main,
-    Play,
-    Exit,
-    Installing,
-    Rickroll,
-    Settings,
-    HowToPlay,
-    Check,
-    Err,
-    Confirm,
-    FirstTime,
-}
-
-#[derive(Debug, Clone)]
-pub enum GuiMessage {
-    Up,
-    Down,
-    Change(Page),
-    Delay(u8),
-    Tick(Instant),
-    Exit,
-    Restart,
-    Install,
-    Code(String),
-    Check,
-    FirstTime,
-    Update,
-    Version,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Time {
-    Install,
-    Update,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Update {
-    code: String,
-    id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Id {
-    id: String,
-    same: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Version {
-    version: String,
-    same: String,
-}
-
-fn home() -> String {
-    let platform = whoami::platform();
-    let username = whoami::username();
-    match platform {
-        Platform::Windows => format!("C:/Users/{}/AppData/Roaming/", username),
-        Platform::Linux => format!("/home/{}/.", username),
-        Platform::MacOS => format!("/Users/{}/Library/Application Support/", username),
-        _ => process::exit(1),
-    }
+    pub value: [[bool; 34]; 34],
+    pub velocity: Velocity,
+    pub delay: u64,
+    pub page: Page,
+    pub bat_y: usize,
+    pub position: Position,
+    pub is_playing: bool,
+    pub theme: itheme,
+    pub ivalue: Vec<Vec<String>>,
+    pub onw: String,
+    pub offw: String,
+    pub score: usize,
+    pub code: String,
+    pub err: String,
+    pub codeu: String,
+    pub db: Database,
+    pub time: Time,
+    pub id: usize,
+    pub size: usize,
 }
 
 impl Application for Gui {
@@ -250,12 +68,7 @@ impl Application for Gui {
             "mongodb+srv://cursedpong:noddycallum@cursed-pong.4rpcoc2.mongodb.net/",
         )
         .expect("Failed to get client");
-        let path = format!("{}Cursed-Pong", home());
-        println!("{}", path);
-        let mut commd = Command::new("mkdir");
-        commd.arg(format!("{}Cursed-Pong", home()));
-        commd.status().expect("Failed to run command pre");
-        let path = &format!("{}Cursed-Pong{}off.png", home(), '/');
+        let path = &format!("{}Cursed-Pong{}white.png", home(), sw().1);
         let mut ivalue = vec![];
         for _ in 0..32 {
             let mut to_add = vec![];
@@ -271,23 +84,23 @@ impl Application for Gui {
             page: Page::Main,
             bat_y: 8,
             err: String::new(),
-            position: Position::new(5, 4),
+            position: Position::new(16, 17),
             is_playing: false,
-            theme: Theme::new(Color::White, Color::Blue, Color::Green).to_theme(),
+            theme: Theme::new(Color::White, Color::Blue).to_theme(),
             ivalue,
-            onw: "on".to_string(),
-            offw: "off".to_string(),
+            onw: str("blue.png"),
+            offw: str("white.png"),
             score: 0,
             code: String::new(),
             codeu: String::new(),
             db: client.database("db"),
             id: 0,
             time: Time::Install,
-            version: String::new(),
+            size: 50,
         };
-
-        bord.toggle_theme();
         bord.cre_bord();
+        bord.draw_bat();
+        bord.show_pixel();
 
         (bord, window::change_mode(window::Mode::Fullscreen))
     }
@@ -307,14 +120,58 @@ impl Application for Gui {
                 }
             }
             GuiMessage::Change(page) => {
-                match page {
-                    Page::Play => self.is_playing = true,
-                    _ => self.is_playing = false,
-                }
+                self.is_playing = false;
                 self.page = page;
             }
             GuiMessage::Delay(delay) => self.delay = delay as u64,
             GuiMessage::Code(code) => self.code = code,
+            GuiMessage::CheckUp(page) => {
+                let path = Path::exists(Path::new(&format!("{}Cursed-Pong", home())));
+                match page {
+                    Page::Play => {
+                        if path {
+                            self.page = Page::Play;
+                            self.is_playing = true;
+                        } else {
+                            self.err = "Please install Cursed Pong before playing".to_string();
+                            self.page = Page::Err;
+                        }
+                    }
+                    Page::Check => {
+                        if path {
+                            let version = fs::read_to_string(format!("{}Cursed-Pong{}version.scff", home(), sw().1)).expect("Failed to get version");
+                            let versions = self.db.collection::<Version>("version");
+                            let cursor = versions.find(doc! { "same": "" }, None).expect("Failed to get most recent version");
+                            let mut version_r = String::new();
+                            for result in cursor {
+                                version_r = result.expect("Failed to get result").version;
+                            }
+                            if version.trim() == version_r {
+                                self.size = 11;
+                                self.err = "No new update is available.".to_string();
+                                self.page = Page::Err;
+                            } else {
+                                self.size = 11;
+                                self.err = "A new update is available. Click install files on the main page to install.".to_string();                            self.page = Page::Err;
+                            }
+                        } else {
+                            self.err = "Please install Cursed Pong before checking for updates".to_string();
+                        }
+                    }
+                    Page::Confirm => {
+                        if path {
+                            self.time = Time::Update;
+                            self.page = Page::Confirm;
+                        } else {
+                            self.time = Time::Install;
+                            self.page = Page::Check;
+                        }
+                    }
+                    _ => {
+                        println!("Nothing");
+                    }
+                }
+            }
             GuiMessage::Check => {
                 let banned = self.db.collection::<Document>("banned");
                 let banned_cursor = banned.find(doc! { "code": &self.code }, None).expect("Failed to get banned codes");
@@ -327,25 +184,9 @@ impl Application for Gui {
                 if  codes_len > 0 && banned_len == 0 {
                     self.codeu = self.code.clone();
                     self.page = Page::Confirm;
+                    codes.delete_one(doc! { "code": &self.code }, None).expect("Failed to delete code");
                 } else {
                     self.err = "Invalid code".to_string();
-                    self.page = Page::Err;
-                }
-            }
-            GuiMessage::Version => {
-                let fmted = format!("{}Cursed-Pong/version.scff", home());
-                let version = fs::read_to_string(format!("{}Cursed-Pong/version.scff", home())).expect("Failed to get version");
-                let versions = self.db.collection::<Version>("version");
-                let cursor = versions.find(doc! { "same": "" }, None).expect("Failed to get most recent version");
-                let mut version_r = String::new();
-                for result in cursor {
-                    version_r = result.expect("Failed to get result").version;
-                }
-                if version.trim() == version_r {
-                    self.err = "No new update is available.".to_string();
-                    self.page = Page::Err;
-                } else {
-                    self.err = "A new update is available. Click install files on the main page to install.".to_string();
                     self.page = Page::Err;
                 }
             }
@@ -364,6 +205,7 @@ impl Application for Gui {
                         if let Time::Update = self.time {
                             break 'block2;
                         }
+                        fs::create_dir(format!("{}Cursed-Pong", home())).expect("Failed to create directory");
                         let id = self.db.collection::<Id>("id");
                         let update = self.db.collection::<Update>("update");
                         let cursor = id
@@ -374,9 +216,9 @@ impl Application for Gui {
                             text = result.expect("Failed to get result").id;
                         }
                         let text = text.parse::<usize>().expect("Failed to parse string");
-                        File::create(format!("{}Cursed-Pong/id.scff", home()))
+                        File::create(format!("{}Cursed-Pong{}id.scff", home(), sw().1))
                             .expect("Failed to create file");
-                        fs::write(format!("{}Cursed-Pong/id.scff", home()), text.to_string())
+                        fs::write(format!("{}Cursed-Pong{}id.scff", home(), sw().1), text.to_string())
                             .expect("Failed to write to file");
                         id.delete_many(doc! {}, None)
                             .expect("Failed to delete data");
@@ -400,7 +242,7 @@ impl Application for Gui {
                         break 'block1;
                     }
                     let update = self.db.collection::<Update>("update");
-                    let text = fs::read_to_string(format!("{}Cursed-Pong/id.scff", home()))
+                    let text = fs::read_to_string(format!("{}Cursed-Pong{}id.scff", home(), sw().1))
                         .expect("Failed to read to string");
                     let text = text.parse::<usize>().expect("Failed to parse text");
                     self.id = text;
@@ -414,32 +256,16 @@ impl Application for Gui {
                         )
                         .expect("Failed to insert data 2 1");
                 }
-                let mut commds = [
-                    Command::new("wget"),
-                    Command::new("bash"),
-                    Command::new("rm"),
-                ];
-                let platform = whoami::platform();
-                let file = match platform {
-                    Platform::Linux => "linux.sh",
-                    Platform::MacOS => "macos.sh",
-                    Platform::Windows => "windows.sh",
-                    _ => process::exit(1),
-                };
-                commds[0].arg(format!(
-                    "https://narwhal-studios.github.io/Cursed-Pong/files{}",
-                    file
-                ));
-                commds[1].arg(file);
-                commds[2].arg(file);
-                commds[0].current_dir(format!("{}Cursed-Pong", home()));
-                commds[1].current_dir(format!("{}Cursed-Pong", home()));
-                commds[2].current_dir(format!("{}Cursed-Pong", home()));
-                commds[0]
-                    .status()
-                    .expect("Failed to download install script");
-                commds[1].status().expect("Failed to run install script");
-                commds[2].status().expect("Failed to delete install script");
+                let (code, _, _) = run_script!(format!(r#"
+                cd {}Cursed-pong;
+                {};
+                tar -xzvf files.zip;
+                rm files.zip;
+                exit 0;
+                "#, home(), download())).expect("Failed to run script");
+                if code != 0 {
+                    panic!("Failed to run installation script");
+                }
                 self.page = Page::Main;
             }
             GuiMessage::Tick(_) => {
@@ -467,11 +293,15 @@ impl Application for Gui {
                     self.toggle_theme();
                 }
 
+                if self.checkx() && self.checky() {
+                    self.onw = str("images/dvd.png");
+                }
+
                 self.addx();
                 self.addy();
             }
             GuiMessage::Restart => {
-                let path = &format!("{}Cursed-Pong{}off.png", home(), '/');
+                let path = &format!("{}Cursed-Pong{}white.png", home(), '/');
                 let mut ivalue = vec![];
                 for _ in 0..32 {
                     let mut to_add = vec![];
@@ -480,33 +310,28 @@ impl Application for Gui {
                     }
                     ivalue.push(to_add);
                 }
-                let client = Client::with_uri_str(
-                    "mongodb+srv://cursedpong:noddycallum@cursed-pong.4rpcoc2.mongodb.net/",
-                )
-                .expect("Failed to get client");
+                let db = self.db.clone();
                 let mut bord = Self {
                     value: [[false; 34]; 34],
                     velocity: Velocity::new(1, 1),
                     delay: 2,
                     page: Page::Main,
                     bat_y: 8,
-                    position: Position::new(5, 4),
+                    position: Position::new(16, 17),
                     is_playing: false,
-                    theme: Theme::new(Color::White, Color::Blue, Color::Green).to_theme(),
+                    theme: Theme::new(Color::White, Color::Blue).to_theme(),
                     ivalue,
-                    onw: "on".to_string(),
-                    offw: "off".to_string(),
+                    onw: str("blue.png"),
+                    offw: str("white.png"),
                     score: 0,
                     err: String::new(),
                     code: String::new(),
                     codeu: String::new(),
-                    db: client.database("db"),
+                    db,
                     id: 0,
                     time: Time::Install,
-                    version: String::new(),
+                    size: 50,
                 };
-
-                bord.toggle_theme();
                 bord.cre_bord();
 
                 *self = bord;
@@ -525,11 +350,11 @@ impl Application for Gui {
     fn view(&self) -> Element<'_, Self::Message> {
         let main = container(column![
             text(format!("Cursed Pong v{}", version!())).size(50),
-            button("Play").on_press(GuiMessage::Change(Page::Play)),
+            button("Play").on_press(GuiMessage::CheckUp(Page::Play)),
             button("How to Play").on_press(GuiMessage::Change(Page::HowToPlay)),
             button("Settings").on_press(GuiMessage::Change(Page::Settings)),
-            button("Install files").on_press(GuiMessage::Change(Page::FirstTime)),
-            button("Check for updates").on_press(GuiMessage::Version),
+            button("Install files").on_press(GuiMessage::CheckUp(Page::Confirm)),
+            button("Check for updates").on_press(GuiMessage::CheckUp(Page::Check)),
             button("Exit").on_press(GuiMessage::Change(Page::Exit)),
         ])
         .center_x()
@@ -543,8 +368,8 @@ impl Application for Gui {
             for num2 in 0..32 {
                 toadd.push(
                     Image::new(&self.ivalue[num1][num2])
-                        .width(25)
-                        .height(25)
+                        .width(15)
+                        .height(15)
                         .into(),
                 );
             }
@@ -568,9 +393,7 @@ impl Application for Gui {
         .into();
 
         let rickroll = container(column![
-            text("Game Over!").size(50),
-            text(format!("Score: {}", self.score)),
-            button("Play again").on_press(GuiMessage::Restart)
+            Image::new(format!("{}/Cursed-Pong/bluescreen.png", home())),
         ])
         .center_x()
         .center_y()
@@ -637,7 +460,7 @@ impl Application for Gui {
 
         let confirm = container(column![
             text("Install").size(50),
-            text("Are you sure you want to install Cursed Pong?"),
+            text(format!("Are you sure you want to {} Cursed Pong?", self.time.str())),
             row![
                 button("Yes").on_press(GuiMessage::Install),
                 button("No").on_press(GuiMessage::Change(Page::Main))
@@ -649,22 +472,14 @@ impl Application for Gui {
         .width(Fill)
         .into();
 
-        let first_time = container(column![
-            text("Install").size(50),
-            text("Is this the first time you are installing Cursed Pong or is this an update?"),
-            row![
-                button("First Time").on_press(GuiMessage::FirstTime),
-                button("Update").on_press(GuiMessage::Update),
-            ],
-        ])
-        .center_x()
-        .center_y()
-        .height(Fill)
-        .width(Fill)
-        .into();
+        let size = if self.size == 50 {
+            50
+        } else {
+            11
+        };
 
         let err = container(column![
-            text(&self.err).size(50),
+            text(&self.err).size(size),
             button("Back to main page").on_press(GuiMessage::Change(Page::Main)),
         ])
         .center_x()
@@ -684,7 +499,6 @@ impl Application for Gui {
             Page::Check => check,
             Page::Confirm => confirm,
             Page::Err => err,
-            Page::FirstTime => first_time,
         }
     }
     fn theme(&self) -> Self::Theme {
