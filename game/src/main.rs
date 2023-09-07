@@ -1,7 +1,8 @@
 pub mod colors;
+pub mod defs;
 pub mod gui;
 pub mod gui_parts;
-pub mod defs;
+pub mod updatefn;
 
 use iced::{Application, Settings};
 

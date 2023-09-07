@@ -1,8 +1,8 @@
+use crate::defs::str;
 use iced::{
     theme::{self, Theme as itheme},
     Color as icolor,
 };
-use crate::defs::str;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {

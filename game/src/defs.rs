@@ -1,22 +1,14 @@
-use serde::{Serialize, Deserialize};
-use std::{
-    time::Instant,
-    process,
-};
+use std::{process, time::Instant};
 use whoami::Platform;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Page {
     Main,
     Play,
-    Exit,
-    Installing,
     Rickroll,
     Settings,
     HowToPlay,
-    Check,
     Err,
-    Confirm,
 }
 
 #[derive(Debug, Clone)]
@@ -28,45 +20,8 @@ pub enum GuiMessage {
     Tick(Instant),
     Exit,
     Restart,
-    Install,
-    Code(String),
-    Check,
-    FirstTime,
-    Update,
-    CheckUp(Page),
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Time {
-    Install,
-    Update,
-}
-
-impl Time {
-    pub fn str(&self) -> String {
-        match self {
-            Self::Install => str("install"),
-            Self::Update => str("update"),
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Update {
-    pub code: String,
-    pub id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Id {
-    pub id: String,
-    pub same: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Version {
-    pub version: String,
-    pub same: String,
+    Texture(String),
+    TextureAssign,
 }
 
 pub fn home() -> String {
@@ -84,13 +39,6 @@ pub fn sw() -> (bool, char) {
     match whoami::platform() {
         Platform::Windows => (true, '/'),
         _ => (true, '/'),
-    }
-}
-
-pub fn download() -> String {
-    match whoami::platform() {
-        Platform::Windows => str("Invoke-WebRequest -URI https://narwhal-studios.github.io/Cursed-Pong/files/files.zip -OutFile ./files.zip"),
-        _ => str("wget https://narwhal-studios.github.io/Cursed-Pong/files/files.zip")
     }
 }
 

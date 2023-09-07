@@ -1,10 +1,7 @@
-use crate::gui::Gui;
-use crate::defs::{
-    home,
-    sw,
-};
-use rand::{thread_rng, Rng};
 use crate::colors::{Color, Theme};
+use crate::defs::{home, sw};
+use crate::gui::Gui;
+use rand::{thread_rng, Rng};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
@@ -42,6 +39,12 @@ pub trait GuiParts {
     fn checkx(&self) -> bool;
     fn checky(&self) -> bool;
     fn toggle_theme(&mut self);
+    fn will(&mut self);
+    fn check_will(&self) -> bool;
+    fn add_will(&mut self);
+    fn rick(&mut self);
+    fn check_rick(&self) -> bool;
+    fn add_rick(&mut self);
 }
 
 impl GuiParts for Gui {
@@ -67,6 +70,8 @@ impl GuiParts for Gui {
         }
         self.ivalue = ivalue;
         self.cre_bord();
+        self.add_will();
+        self.add_rick();
     }
     fn cre_bord(&mut self) {
         self.value[0] = [true; 34];
@@ -138,9 +143,41 @@ impl GuiParts for Gui {
             Color::Pink,
         ];
         let mut rng = thread_rng();
-        let (background, on) = (colors[rng.gen_range(0..=8)],colors[rng.gen_range(0..=8)]);
+        let (background, on) = (colors[rng.gen_range(0..=8)], colors[rng.gen_range(0..=8)]);
         self.theme = Theme::new(background, on).to_theme();
-        self.onw = format!("{}.png", on.to_string());
-        self.offw = format!("{}.png", background.to_string());
+        self.onw = format!("{}/{}.png", self.texture, on.to_string());
+        self.offw = format!("{}/{}.png", self.texture, background.to_string());
+        self.will();
+        self.rick();
+    }
+    fn will(&mut self) {
+        let mut rand_num = thread_rng();
+        self.will = Position::new(rand_num.gen_range(1..=31), rand_num.gen_range(0..=31));
+        self.ivalue[self.will.y][self.will.x] = format!("{}Cursed-Pong/{}/will.png", home(), self.texture);
+    }
+    fn add_will(&mut self) {
+        self.ivalue[self.will.y][self.will.y] = format!("{}Cursed-Pong/{}/will.png", home(), self.texture);
+    }
+    fn check_will(&self) -> bool {
+        if self.position.x == self.will.x && self.position.y == self.will.y {
+            true
+        } else {
+            false
+        }
+    }
+    fn rick(&mut self) {
+        let mut rand_num = thread_rng();
+        self.rick = Position::new(rand_num.gen_range(1..=31), rand_num.gen_range(0..=31));
+        self.ivalue[self.rick.y][self.rick.x] = format!("{}Cursed-Pong/{}/rick.png", home(), self.texture);
+    }
+    fn add_rick(&mut self) {
+        self.ivalue[self.rick.y][self.rick.x] = format!("{}Cursed-Pong/{}/rick.png", home(), self.texture);
+    }
+    fn check_rick(&self) -> bool {
+        if self.position.x == self.rick.x && self.position.y == self.rick.y {
+            true
+        } else {
+            false
+        }
     }
 }
