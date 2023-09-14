@@ -144,19 +144,22 @@ impl GuiParts for Gui {
         ];
         let mut rng = thread_rng();
         let (background, on) = (colors[rng.gen_range(0..=8)], colors[rng.gen_range(0..=8)]);
-        self.theme = Theme::new(background, on).to_theme();
-        self.onw = format!("{}/{}.png", self.texture, on.to_string());
-        self.offw = format!("{}/{}.png", self.texture, background.to_string());
+        self.theme = Theme::new(background, on).to_theme(&self.texture);
+        self.onw = format!("images/{}/{}.png", self.texture, on.to_string());
+        self.offw = format!("images/{}/{}.png", self.texture, background.to_string());
         self.will();
         self.rick();
+        self.audio.play(&background.to_string());
     }
     fn will(&mut self) {
         let mut rand_num = thread_rng();
         self.will = Position::new(rand_num.gen_range(1..=31), rand_num.gen_range(0..=31));
-        self.ivalue[self.will.y][self.will.x] = format!("{}Cursed-Pong/{}/will.png", home(), self.texture);
+        self.ivalue[self.will.y][self.will.x] =
+            format!("{}Cursed-Pong/images/{}/will.png", home(), self.texture);
     }
     fn add_will(&mut self) {
-        self.ivalue[self.will.y][self.will.y] = format!("{}Cursed-Pong/{}/will.png", home(), self.texture);
+        self.ivalue[self.will.y][self.will.y] =
+            format!("{}Cursed-Pong/images/{}/will.png", home(), self.texture);
     }
     fn check_will(&self) -> bool {
         if self.position.x == self.will.x && self.position.y == self.will.y {
@@ -168,10 +171,12 @@ impl GuiParts for Gui {
     fn rick(&mut self) {
         let mut rand_num = thread_rng();
         self.rick = Position::new(rand_num.gen_range(1..=31), rand_num.gen_range(0..=31));
-        self.ivalue[self.rick.y][self.rick.x] = format!("{}Cursed-Pong/{}/rick.png", home(), self.texture);
+        self.ivalue[self.rick.y][self.rick.x] =
+            format!("{}Cursed-Pong/images/{}/rick.png", home(), self.texture);
     }
     fn add_rick(&mut self) {
-        self.ivalue[self.rick.y][self.rick.x] = format!("{}Cursed-Pong/{}/rick.png", home(), self.texture);
+        self.ivalue[self.rick.y][self.rick.x] =
+            format!("{}Cursed-Pong/images/{}/rick.png", home(), self.texture);
     }
     fn check_rick(&self) -> bool {
         if self.position.x == self.rick.x && self.position.y == self.rick.y {

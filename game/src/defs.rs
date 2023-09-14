@@ -9,6 +9,9 @@ pub enum Page {
     Settings,
     HowToPlay,
     Err,
+    Wait,
+    Updates,
+    NoUpdates,
 }
 
 #[derive(Debug, Clone)]
@@ -22,6 +25,10 @@ pub enum GuiMessage {
     Restart,
     Texture(String),
     TextureAssign,
+    Sound(String),
+    SoundAssign,
+    CheckUpdates,
+    LaunchUpdater,
 }
 
 pub fn home() -> String {
@@ -44,4 +51,19 @@ pub fn sw() -> (bool, char) {
 
 pub fn str(string: &str) -> String {
     string.to_string()
+}
+
+pub trait F32 {
+    fn f32(&self) -> f32;
+}
+
+impl F32 for f64 {
+    fn f32(&self) -> f32 {
+        *self as f32
+    }
+}
+
+pub enum Updates {
+    Updates,
+    NoUpdates,
 }

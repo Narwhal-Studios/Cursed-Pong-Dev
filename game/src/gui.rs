@@ -1,6 +1,7 @@
 use crate::colors::{Color, Theme};
-use crate::defs::{home, str, sw, GuiMessage, Page};
+use crate::defs::{home, str, sw, GuiMessage, Page, Updates};
 use crate::gui_parts::{GuiParts, Position, Velocity};
+use crate::updatefn::Fns;
 use iced::time;
 use iced::{
     executor,
@@ -10,9 +11,13 @@ use iced::{
     Length::Fill,
     Subscription,
 };
+use mongodb::{
+    options::ClientOptions,
+    sync::{Client, Database},
+};
+use rusty_audio::Audio;
 use std::time::Duration;
 use version::version;
-use crate::updatefn::Fns;
 
 pub struct Gui {
     pub value: [[bool; 34]; 34],
@@ -35,6 +40,11 @@ pub struct Gui {
     pub rick: Position,
     pub texture: String,
     pub texture_temp: String,
+    pub sound: String,
+    pub sound_temp: String,
+    pub audio: Audio,
+    pub init: bool,
+    pub db: Option<Database>,
 }
 
 impl Application for Gui {
@@ -57,15 +67,15 @@ impl Application for Gui {
             value: [[false; 34]; 34],
             velocity: Velocity::new(1, 1),
             delay: 2,
-            page: Page::Main,
+            page: Page::Wait,
             bat_y: 8,
             err: String::new(),
             position: Position::new(16, 17),
             is_playing: false,
-            theme: Theme::new(Color::White, Color::Blue).to_theme(),
+            theme: Theme::new(Color::White, Color::Blue).to_theme("default"),
             ivalue,
-            onw: str("default/blue.png"),
-            offw: str("default/white.png"),
+            onw: str("images/default/blue.png"),
+            offw: str("images/default/white.png"),
             score: 0,
             id: 0,
             size: 50,
@@ -74,10 +84,62 @@ impl Application for Gui {
             rick: Position::new(23, 13),
             texture: str("default"),
             texture_temp: str(""),
+            sound: str("default"),
+            sound_temp: str(""),
+            audio: Audio::new(),
+            db: None,
+            init: false,
         };
         bord.cre_bord();
         bord.draw_bat();
         bord.show_pixel();
+
+        bord.audio.add(
+            "black",
+            &format!("{}Cursed-Pong/audio/default/black.ogg", home()),
+        );
+        bord.audio.add(
+            "white",
+            &format!("{}Cursed-Pong/audio/default/white.ogg", home()),
+        );
+        bord.audio.add(
+            "red",
+            &format!("{}Cursed-Pong/audio/default/red.ogg", home()),
+        );
+        bord.audio.add(
+            "orange",
+            &format!("{}Cursed-Pong/audio/default/orange.ogg", home()),
+        );
+        bord.audio.add(
+            "yellow",
+            &format!("{}Cursed-Pong/audio/default/yellow.ogg", home()),
+        );
+        bord.audio.add(
+            "green",
+            &format!("{}Cursed-Pong/audio/default/green.ogg", home()),
+        );
+        bord.audio.add(
+            "blue",
+            &format!("{}Cursed-Pong/audio/default/blue.ogg", home()),
+        );
+        bord.audio.add(
+            "purple",
+            &format!("{}Cursed-Pong/audio/default/purple.ogg", home()),
+        );
+        bord.audio.add(
+            "pink",
+            &format!("{}Cursed-Pong/audio/default/pink.ogg", home()),
+        );
+        bord.audio.add(
+            "startup",
+            &format!("{}Cursed-Pong/audio/default/startup.ogg", home()),
+        );
+        bord.audio.add(
+            "rickroll",
+            &format!("{}Cursed-Pong/audio/default/rickroll.ogg", home()),
+        );
+
+        bord.audio.play("startup");
 
         (bord, window::change_mode(window::Mode::Fullscreen))
     }
@@ -153,7 +215,18 @@ impl Application for Gui {
             text(format!("Delay: {}", self.delay)),
             slider(1..=8, self.delay as u8, GuiMessage::Delay),
             text(format!("Current Texture Pack: {}", self.texture)),
-            row![text("Choose Texture Pack: "), text_input("", &self.texture_temp).on_input(GuiMessage::Texture), button("Go").on_press(GuiMessage::TextureAssign)],
+            row![
+                text("Choose Texture Pack: "),
+                text_input("", &self.texture_temp).on_input(GuiMessage::Texture),
+                button("Go").on_press(GuiMessage::TextureAssign)
+            ],
+            text(format!("Current Sound Pack: {}", self.sound)),
+            row![
+                text("Choose Sound Pack: "),
+                text_input("", &self.sound_temp).on_input(GuiMessage::Sound),
+                button("Go").on_press(GuiMessage::SoundAssign)
+            ],
+            button("Check for Updates").on_press(GuiMessage::CheckUpdates),
             button("Exit").on_press(GuiMessage::Exit),
         ])
         .center_x()
@@ -174,7 +247,39 @@ impl Application for Gui {
 
         let err = container(column![
             text(&self.err).size(size),
-            button("Back to main page").on_press(GuiMessage::Change(Page::Main)),
+            button("Back to main page").on_press(GuiMessage::Restart),
+        ])
+        .center_x()
+        .center_y()
+        .height(Fill)
+        .width(Fill)
+        .into();
+
+        let wait = container(column![text(
+            "Please wait while Cursed Pong is being initialized"
+        )
+        .size(size),])
+        .center_x()
+        .center_y()
+        .height(Fill)
+        .width(Fill)
+        .into();
+
+        let updates = container(column![
+            text("Updates Available").size(50),
+            text("Launch the Updater to Update Cursed Pong"),
+            button("Launch Updater").on_press(GuiMessage::LaunchUpdater),
+            button("Back to Main Page").on_press(GuiMessage::Restart),
+        ])
+        .center_x()
+        .center_y()
+        .height(Fill)
+        .width(Fill)
+        .into();
+
+        let no_updates = container(column![
+            text("No Updates Available").size(50),
+            button("Back to Main Page").on_press(GuiMessage::Restart)
         ])
         .center_x()
         .center_y()
@@ -189,6 +294,9 @@ impl Application for Gui {
             Page::Settings => settings,
             Page::HowToPlay => howtoplay,
             Page::Err => err,
+            Page::Wait => wait,
+            Page::Updates => updates,
+            Page::NoUpdates => no_updates,
         }
     }
     fn theme(&self) -> Self::Theme {

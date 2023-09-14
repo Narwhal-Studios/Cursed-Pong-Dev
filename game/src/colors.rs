@@ -1,8 +1,10 @@
-use crate::defs::str;
+use crate::defs::{home, str, F32};
 use iced::{
     theme::{self, Theme as itheme},
     Color as icolor,
 };
+use std::fs;
+use toml::{Table, Value};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
@@ -18,17 +20,33 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn to_irgb(&self) -> (f32, f32, f32) {
-        match self {
-            Self::White => (1.0, 1.0, 1.0),
-            Self::Black => (0.0, 0.0, 0.0),
-            Self::Red => (1.0, 0.0, 0.0),
-            Self::Orange => (1.0, 0.5, 0.0),
-            Self::Yellow => (1.0, 1.0, 0.0),
-            Self::Green => (0.0, 1.0, 0.0),
-            Self::Blue => (0.0, 0.0, 1.0),
-            Self::Purple => (0.7, 0.0, 0.7),
-            Self::Pink => (1.0, 0.5, 0.8),
+    pub fn to_irgb(&self, pack: &str) -> (f64, f64, f64) {
+        let conf = fs::read_to_string(&format!("{}Cursed-Pong/images/{}/Pack.toml", home(), pack))
+            .unwrap()
+            .parse::<Table>()
+            .unwrap();
+        if conf.get("default").unwrap().is_bool() && conf.get("default").unwrap().as_bool().unwrap()
+        {
+            match self {
+                Self::White => (1.0, 1.0, 1.0),
+                Self::Black => (0.0, 0.0, 0.0),
+                Self::Red => (1.0, 0.0, 0.0),
+                Self::Orange => (1.0, 0.5, 0.0),
+                Self::Yellow => (1.0, 1.0, 0.0),
+                Self::Green => (0.0, 1.0, 0.0),
+                Self::Blue => (0.0, 0.0, 1.0),
+                Self::Purple => (0.7, 0.0, 0.7),
+                Self::Pink => (1.0, 0.5, 0.8),
+            }
+        } else {
+            match conf.get(&self.to_string()).unwrap() {
+                Value::Array(array) => (
+                    array.get(0).unwrap().as_float().unwrap(),
+                    array.get(1).unwrap().as_float().unwrap(),
+                    array.get(2).unwrap().as_float().unwrap(),
+                ),
+                _ => panic!("Not an array"),
+            }
         }
     }
     pub fn to_string(&self) -> String {
@@ -58,14 +76,14 @@ impl Theme {
             on,
         }
     }
-    pub fn to_theme(&self) -> itheme {
-        let (br, bg, bb) = self.background.to_irgb();
-        let (tr, tg, tb) = self.on.to_irgb();
+    pub fn to_theme(&self, pack: &str) -> itheme {
+        let (br, bg, bb) = self.background.to_irgb(pack);
+        let (tr, tg, tb) = self.on.to_irgb(pack);
 
         itheme::custom(theme::Palette {
-            background: icolor::from_rgb(br, bg, bb),
-            text: icolor::from_rgb(tr, tg, tb),
-            primary: icolor::from_rgb(tr, tg, tb),
+            background: icolor::from_rgb(br.f32(), bg.f32(), bb.f32()),
+            text: icolor::from_rgb(tr.f32(), tg.f32(), tb.f32()),
+            primary: icolor::from_rgb(tr.f32(), tg.f32(), tb.f32()),
             success: icolor::from_rgb(0.0, 1.0, 0.0),
             danger: icolor::from_rgb(1.0, 0.0, 0.0),
         })
