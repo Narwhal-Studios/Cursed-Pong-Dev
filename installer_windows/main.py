@@ -36,7 +36,7 @@ def run(cmd):
 
 def clicked():
     result = col.find_one({"code":code.get()})
-    if code.get() == "cpongcode2" or result != None:
+    if code.get() == "c" or result != None:
         lbl2.configure(text="Correct code")
         lbl3.configure(text="Are you sure you would like to install Cursed Pong?")
         btn2 = Button(root, text="Yes", command=yes)
@@ -47,12 +47,18 @@ def clicked():
         lbl2.configure(text="Invalid code")
 
 def yes():
-    if code.get() != "cpongcode2":
+    if code.get() != "c":
         col.delete_one({"code":code.get()})
     path = Path(os.path.expanduser("~")+"\\AppData\\Roaming\\Cursed-Pong")
     print(path)
-    command = "mkdir "+os.path.expanduser("~")+"\\AppData\\Roaming\\Cursed-Pong"
-    commd_info = run(command)
+    command = "mkdir "+path.__str__()
+    print(command)
+    #commd_info = run(command)
+    commd_info = run("touch test.txt")
+    print("test")
+
+def after():
+    print("test")
     if commd_info.returncode != 0:
         print("An error occured: %s", commd_info.stderr)
         sys.exit()

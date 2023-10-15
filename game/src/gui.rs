@@ -43,7 +43,7 @@ pub struct Gui {
     pub sound: String,
     pub sound_temp: String,
     pub audio: Audio,
-    pub init: bool,
+    pub init: bkool,
     pub db: Option<Database>,
 }
 
