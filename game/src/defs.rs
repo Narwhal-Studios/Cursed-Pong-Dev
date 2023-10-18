@@ -9,6 +9,7 @@ pub enum Page {
     Settings,
     HowToPlay,
     Err,
+    NoEscape,
     Wait,
     Updates,
     NoUpdates,

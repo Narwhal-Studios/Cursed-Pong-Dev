@@ -1,5 +1,5 @@
 use crate::colors::{Color, Theme};
-use crate::defs::{home, str, sw, GuiMessage, Page, Updates};
+use crate::defs::{home, str, sw, GuiMessage, Page};
 use crate::gui_parts::{GuiParts, Position, Velocity};
 use crate::updatefn::Fns;
 use iced::time;
@@ -12,8 +12,7 @@ use iced::{
     Subscription,
 };
 use mongodb::{
-    options::ClientOptions,
-    sync::{Client, Database},
+    sync::Database,
 };
 use rusty_audio::Audio;
 use std::time::Duration;
@@ -43,7 +42,7 @@ pub struct Gui {
     pub sound: String,
     pub sound_temp: String,
     pub audio: Audio,
-    pub init: bkool,
+    pub init: bool,
     pub db: Option<Database>,
 }
 
@@ -71,7 +70,7 @@ impl Application for Gui {
             bat_y: 8,
             err: String::new(),
             position: Position::new(16, 17),
-            is_playing: false,
+            is_playing: true,
             theme: Theme::new(Color::White, Color::Blue).to_theme("default"),
             ivalue,
             onw: str("images/default/blue.png"),
@@ -226,7 +225,7 @@ impl Application for Gui {
                 text_input("", &self.sound_temp).on_input(GuiMessage::Sound),
                 button("Go").on_press(GuiMessage::SoundAssign)
             ],
-            button("Check for Updates").on_press(GuiMessage::CheckUpdates),
+            //button("Check for Updates").on_press(GuiMessage::CheckUpdates),
             button("Exit").on_press(GuiMessage::Exit),
         ])
         .center_x()
@@ -248,6 +247,15 @@ impl Application for Gui {
         let err = container(column![
             text(&self.err).size(size),
             button("Back to main page").on_press(GuiMessage::Restart),
+        ])
+        .center_x()
+        .center_y()
+        .height(Fill)
+        .width(Fill)
+        .into();
+
+        let no_escape = container(column![
+            text("yOu TriEd tO TrICk Me DiDnT yOU??!").size(size),
         ])
         .center_x()
         .center_y()
@@ -294,6 +302,7 @@ impl Application for Gui {
             Page::Settings => settings,
             Page::HowToPlay => howtoplay,
             Page::Err => err,
+            Page::NoEscape => no_escape,
             Page::Wait => wait,
             Page::Updates => updates,
             Page::NoUpdates => no_updates,
